@@ -4,10 +4,10 @@ const Footer = () => {
     return (
         <div className='w-full bg-purple-600 dark:bg-black text-white p-6 space-y-2'>
             <p className='text-center'>Made with 🩷 on earth</p>
-            <p className='text-center'>Follow us on
-                <a href="https://www.facebook.com/" target='_blank' className='text-gray-200 mx-2'>Facebook</a> |
-                <a href="https://www.x.com/" target='_blank' className='text-gray-200 mx-2'>Twitter</a> |
-                <a href="https://www.instagram.com/" target='_blank' className='text-gray-200 mx-2'>Instagram</a>
+            <p className='text-center'>Follow us on:
+                <a href="https://www.linkedin.com/in/rajani-ranjan-jha" target='_blank' className='underline text-gray-200 mx-2'>LinkedIn</a> |
+                <a href="https://x.com/rajanijha_dev" target='_blank' className='underline text-gray-200 mx-2'>X</a> |
+                <a href="https://www.instagram.com/rajanijha_dev" target='_blank' className='underline text-gray-200 mx-2'>Instagram</a>
             </p>
             <p className='text-center flex items-center gap-2 justify-center'>
                 <span>Contact us:</span>

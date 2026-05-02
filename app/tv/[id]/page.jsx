@@ -18,6 +18,7 @@ const TV = () => {
     const context = useUserContext()
     const [user, setUser] = useState({})
     const [loading, setloading] = useState(false)
+    const [error, setError] = useState(null)
     const [LoadingReviews, setLoadingReviews] = useState(false)
     const [reviewBtn, setreviewBtn] = useState(false)
     const [isFirstReview, setIsFirstReview] = useState(true)
@@ -63,39 +64,50 @@ const TV = () => {
     }, [context.user, context.watchlist]);
 
     const loadTvDetails = async (tvId) => {
-        setloading(true)
-        const output = await getMediaById(tvId, 'tv')
-        //console.log(output)
-        setTvDetails(output)
-        setloading(false)
-
+        try {
+            setloading(true)
+            setError(null)
+            const output = await getMediaById(tvId, 'tv')
+            setTvDetails(output)
+        } catch (err) {
+            console.error("Error loading TV details:", err)
+            setError(err.message || "Failed to load TV details")
+        } finally {
+            setloading(false)
+        }
     }
 
     const loadTvVideos = async (tvId) => {
-        const output = await getMediaVideos(tvId, 'tv')
-        //console.log(output)
-        const filtered = await output.filter(
-            (i) => i.type == "Trailer" && i.site == "YouTube"
-        );
-        setTvTrailer(filtered)
-        setTvVideos(output)
-
+        try {
+            const output = await getMediaVideos(tvId, 'tv')
+            const filtered = output.filter(
+                (i) => i.type == "Trailer" && i.site == "YouTube"
+            );
+            setTvTrailer(filtered)
+            setTvVideos(output)
+        } catch (err) {
+            console.error("Error loading TV videos:", err)
+        }
     }
 
     const loadTvPictures = async (tvId) => {
-        const output = await getMediaPictures(tvId, 'tv')
-        //console.log(output)
-        setTvPictures(output)
-
+        try {
+            const output = await getMediaPictures(tvId, 'tv')
+            setTvPictures(output)
+        } catch (err) {
+            console.error("Error loading TV pictures:", err)
+        }
     }
 
     const loadTvCredits = async (tvId) => {
-        const output = await getMediaCredits(tvId, 'tv')
-        //console.log(output)
-        setTvCasts(output.casts)
-        setTvDirectors(output.directors)
-        setTvWriters(output.writers)
-
+        try {
+            const output = await getMediaCredits(tvId, 'tv')
+            setTvCasts(output.casts)
+            setTvDirectors(output.directors)
+            setTvWriters(output.writers)
+        } catch (err) {
+            console.error("Error loading TV credits:", err)
+        }
     }
 
 
@@ -234,7 +246,26 @@ const TV = () => {
                     <p className="text-gray-300">Loading series...</p>
                 </div>
             </>
+        )
+    }
 
+    if (error) {
+        return (
+            <>
+                <Navbar />
+                <div className="w-full h-screen flex flex-col justify-center items-center bg-gradient-to-r from-purple-500 via-purple-900 to-purple-500 dark:from-black dark:via-black/90 dark:to-black px-4 text-white">
+                    <div className="bg-white/10 backdrop-blur-md p-8 rounded-2xl border border-white/20 flex flex-col items-center max-w-lg w-full text-center shadow-2xl">
+                        <h2 className="text-3xl font-bold mb-2">Error</h2>
+                        <p className="text-gray-300 mb-8">{error}</p>
+                        <button 
+                            onClick={() => window.location.reload()}
+                            className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-full font-bold transition-all"
+                        >
+                            Try Again
+                        </button>
+                    </div>
+                </div>
+            </>
         )
     }
 

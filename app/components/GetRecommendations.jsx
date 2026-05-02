@@ -5,28 +5,46 @@ import { getMediaRecommendations } from '../handlers/mediaHandler'
 const GetRecommendations = ({ mediaId, mediaType }) => {
     const [recommendations, setRecommendations] = useState()
     const [loading, setLoading] = useState(false)
+    const [error, setError] = useState(null)
 
     const loadMediaRecommendations = async () => {
-        const output = await getMediaRecommendations(mediaId, mediaType)
-        // console.log("Recommendations:", output);
-        setRecommendations(output)
+        try {
+            setError(null)
+            const output = await getMediaRecommendations(mediaId, mediaType)
+            setRecommendations(output)
+        } catch (err) {
+            console.error("Recommendations fetch error:", err)
+            setError("Failed to load recommendations")
+        }
     }
 
     useEffect(() => {
         if(mediaId && mediaType){
             setLoading(true)
-            loadMediaRecommendations().then(() => setLoading(false))
+            loadMediaRecommendations().finally(() => setLoading(false))
         }
     }, [mediaId, mediaType])
 
 
-    if (loading || !recommendations) {
+    if (loading) {
         return (
             <div className="w-full h-96 flex flex-col justify-center items-center ">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-2"></div>
                 <p className="text-gray-300">Loading Recommendations...</p>
             </div>
         )
+    }
+
+    if (error) {
+        return (
+            <div className="w-full h-20 flex flex-col justify-center items-center ">
+                <p className="text-gray-300 italic">{error}</p>
+            </div>
+        )
+    }
+
+    if (!recommendations) {
+        return null;
     }
 
     if(recommendations.length === 0){

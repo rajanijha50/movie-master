@@ -8,12 +8,11 @@ import { getMediaByCategory, getMediaVideos } from '../handlers/mediaHandler';
 import Link from 'next/link';
 import { addToWatchList, removeFromWatchList } from '../handlers/watchlistHandler';
 
-
-
 const ContentLoader = ({
     mediaCategory = 'popular',
     mediaType = 'tv',
     mediaTitle = `${mediaCategory} in ${mediaType}`,
+    onError,
 }) => {
 
     const formatDate = (dateString) => {
@@ -37,26 +36,9 @@ const ContentLoader = ({
     const [loading, setLoading] = useState(true);
     const router = useRouter()
 
-
-    const loadUserfromContext = () => {
-        if (!context || !context.user) {
-            console.warn("Didnot get user from the context!")
-            // return
-        } else {
-
-            setUser(context.user)
-            let IdList = []
-            context.watchlist.forEach((list) => IdList.push(Number(list.media_id)))
-
-            // console.warn(IdList)
-            setUserWatchlist(IdList)
-        }
-    }
-
     // to update user and watchlist when context changes
     useEffect(() => {
         if (context.user) {
-            // console.warn("have user");
             setUser(context.user);
             if (context.watchlist) {
                 let IdList = [];
@@ -66,22 +48,29 @@ const ContentLoader = ({
                 setUserWatchlist([]);
             }
         } else {
-            // console.warn("No user");
             setUser(null);
             setUserWatchlist([]);
         }
     }, [context.user, context.watchlist]);
 
-
     const loadByCategory = async () => {
-        setLoading(true)
-        const output = await getMediaByCategory(mediaCategory, mediaType)
-        if (!output) return
-        setMovies(output)
-        setLoading(false)
+        try {
+            setLoading(true);
+            const output = await getMediaByCategory(mediaCategory, mediaType);
+            if (!output || output.length === 0) {
+                setMovies([]);
+            } else {
+                setMovies(output);
+            }
+        } catch (error) {
+            console.error("ContentLoader fetch error:", error);
+            if (onError) {
+                onError(error.message || "Failed to load content. Please check your connection or API key.");
+            }
+        } finally {
+            setLoading(false);
+        }
     }
-
-
 
     const checkScrollPosition = () => {
         const container = scrollContainerRef.current;
@@ -111,7 +100,6 @@ const ContentLoader = ({
     const handleWatchList = async (contentType, contentId) => {
         if (!user) {
             alert("Please login to add to watchlist")
-            // router.push('/login')
             return
         }
         const alreadyExists = userWatchlist.includes(contentId);
@@ -133,15 +121,23 @@ const ContentLoader = ({
     }
 
     const handleTrailerClick = async (contentType, contentId) => {
-        const output = await getMediaVideos(contentId, contentType)
-        const filtered = await output.filter(
-            (i) => i.type == "Trailer" && i.site == "YouTube"
-        );
-        window.open(`https://www.youtube.com/watch?v=${filtered[0].key}`, '_blank')
+        try {
+            const output = await getMediaVideos(contentId, contentType)
+            const filtered = output.filter(
+                (i) => i.type == "Trailer" && i.site == "YouTube"
+            );
+            if (filtered.length > 0) {
+                window.open(`https://www.youtube.com/watch?v=${filtered[0].key}`, '_blank')
+            } else {
+                alert("No trailer found for this content");
+            }
+        } catch (error) {
+            console.error("Trailer fetch error:", error);
+            alert("Failed to load trailer");
+        }
     }
 
     useEffect(() => {
-        // loadUserfromContext()
         loadByCategory()
         checkScrollPosition();
         const container = scrollContainerRef.current;
@@ -149,14 +145,21 @@ const ContentLoader = ({
             container.addEventListener('scroll', checkScrollPosition);
             return () => container.removeEventListener('scroll', checkScrollPosition);
         }
-    }, []);
+    }, [mediaCategory, mediaType]);
 
 
     if (loading) {
         return (
-            <div className="w-full h-screen flex flex-col justify-center items-center ">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-2"></div>
-                <p className="text-gray-300">Loading...</p>
+            <div className="p-6 px-10 text-white">
+                <div className="flex items-center mb-6">
+                    <div className="w-1 h-8 bg-white/20 mr-3"></div>
+                    <div className="h-8 w-48 bg-white/10 animate-pulse rounded"></div>
+                </div>
+                <div className="flex gap-4 overflow-hidden">
+                    {[1, 2, 3, 4].map((i) => (
+                        <div key={i} className="w-64 h-80 bg-white/5 animate-pulse rounded-lg flex-shrink-0"></div>
+                    ))}
+                </div>
             </div>
         )
     }
@@ -208,7 +211,7 @@ const ContentLoader = ({
                                         <div className="relative"
                                         >
                                             <img
-                                                src={`https://image.tmdb.org/t/p/w400${movie.poster_path}`}
+                                                src={movie.poster_path ? `https://image.tmdb.org/t/p/w400${movie.poster_path}` : '/placeholder.jpg'}
                                                 alt={movie?.original_title || movie.name}
                                                 className="w-full h-80 object-cover hover:scale-102"
 
@@ -289,15 +292,7 @@ const ContentLoader = ({
             </>
         );
     } else {
-
-        return (
-            <div className="w-full h-screen flex flex-col justify-center items-center ">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-2"></div>
-                <p className="text-gray-300">Loading...</p>
-            </div>
-
-        )
-
+        return null; // Don't render anything if no movies and not loading (error handled by parent)
     }
 };
 

@@ -27,7 +27,7 @@ const Navbar = () => {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const savedTheme = localStorage.getItem('theme') || 'light';
+      const savedTheme = localStorage.getItem('theme') || 'dark';
       setTheme(savedTheme);
     }
   }, []);

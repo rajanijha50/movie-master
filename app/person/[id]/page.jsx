@@ -9,32 +9,35 @@ const Person = () => {
     const { id } = useParams();
 
     const [loading, setloading] = useState(true);
+    const [error, setError] = useState(null);
     const [personDetails, setPersonDetails] = useState(null);
     const [personCasts, setPersonCasts] = useState(null);
     const [personCrews, setPersonCrews] = useState([]);
 
     const loadPersonDetails = async () => {
-
-        const output = await getPersonDetails(id)
-        // console.log(output)
-        setPersonDetails(output)
-
+        try {
+            const output = await getPersonDetails(id)
+            setPersonDetails(output)
+        } catch (err) {
+            console.error("Error loading person details:", err)
+            setError(err.message || "Failed to load person details")
+        }
     }
     const loadPersonCredits = async () => {
-
-        const output = await getPersonCredits(id)
-        console.log(output)
-        const withDate = await output.cast.filter((item) => item.release_date || item.first_air_date);
-        const withNoDate = await output.cast.filter((item) => !item.release_date && !item.first_air_date);
-        const sorted = await withDate.sort((a, b) => {
-            const dateA = new Date(a.release_date || a.first_air_date);
-            const dateB = new Date(b.release_date || b.first_air_date);
-            return dateB - dateA;
-        })
-        setPersonCasts([...withNoDate, ...sorted]);
-
-        setPersonCrews(output.crew)
-
+        try {
+            const output = await getPersonCredits(id)
+            const withDate = output.cast.filter((item) => item.release_date || item.first_air_date);
+            const withNoDate = output.cast.filter((item) => !item.release_date && !item.first_air_date);
+            const sorted = withDate.sort((a, b) => {
+                const dateA = new Date(a.release_date || a.first_air_date);
+                const dateB = new Date(b.release_date || b.first_air_date);
+                return dateB - dateA;
+            })
+            setPersonCasts([...withNoDate, ...sorted]);
+            setPersonCrews(output.crew)
+        } catch (err) {
+            console.error("Error loading person credits:", err)
+        }
     }
 
     const handleSortByDepartment = (e) => {
@@ -70,10 +73,13 @@ const Person = () => {
 
 
     useEffect(() => {
-        setloading(true);
-        loadPersonDetails();
-        loadPersonCredits();
-        setloading(false);
+        const loadAll = async () => {
+            setloading(true);
+            setError(null);
+            await Promise.all([loadPersonDetails(), loadPersonCredits()]);
+            setloading(false);
+        };
+        loadAll();
     }, [id])
 
     useEffect(() => {
@@ -81,13 +87,33 @@ const Person = () => {
     }, [personDetails])
     
 
-    if (loading || !personDetails || !personCrews) {
+    if (loading) {
         return (
             <>
                 <Navbar />
                 <div className="w-full h-screen flex flex-col justify-center items-center bg-gradient-to-r from-purple-500 via-purple-900 to-purple-500 dark:from-black dark:via-black/90 dark:to-black">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-2"></div>
                     <p className="text-gray-300">Loading details...</p>
+                </div>
+            </>
+        )
+    }
+
+    if (error) {
+        return (
+            <>
+                <Navbar />
+                <div className="w-full h-screen flex flex-col justify-center items-center bg-gradient-to-r from-purple-500 via-purple-900 to-purple-500 dark:from-black dark:via-black/90 dark:to-black px-4 text-white">
+                    <div className="bg-white/10 backdrop-blur-md p-8 rounded-2xl border border-white/20 flex flex-col items-center max-w-lg w-full text-center shadow-2xl">
+                        <h2 className="text-3xl font-bold mb-2">Error</h2>
+                        <p className="text-gray-300 mb-8">{error}</p>
+                        <button 
+                            onClick={() => window.location.reload()}
+                            className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-full font-bold transition-all"
+                        >
+                            Try Again
+                        </button>
+                    </div>
                 </div>
             </>
         )

@@ -18,6 +18,7 @@ const MOVIE = () => {
     const context = useUserContext()
     const [user, setUser] = useState({})
     const [loading, setloading] = useState(false)
+    const [error, setError] = useState(null)
     const [LoadingReviews, setLoadingReviews] = useState(false)
     const [reviewBtn, setreviewBtn] = useState(false)
     const [isFirstReview, setIsFirstReview] = useState(true)
@@ -50,46 +51,59 @@ const MOVIE = () => {
     }, [context.user, context.watchlist]);
 
     const loadMovieDetails = async (movieId) => {
-        setloading(true)
-        const output = await getMediaById(movieId, 'movie')
-        //console.log(output)
-        setMovieDetails(output)
-        setloading(false)
-
+        try {
+            setloading(true)
+            setError(null)
+            const output = await getMediaById(movieId, 'movie')
+            setMovieDetails(output)
+        } catch (err) {
+            console.error("Error loading movie details:", err)
+            setError(err.message || "Failed to load movie details")
+        } finally {
+            setloading(false)
+        }
     }
 
     const loadMovieVideos = async (movieId) => {
-        const output = await getMediaVideos(movieId, 'movie')
-        //console.log(output)
-        const filtered = await output.filter(
-            (i) => i.type == "Trailer" && i.site == "YouTube"
-        );
-        setMovieTrailer(filtered)
-        setMovieVideos(output)
-
+        try {
+            const output = await getMediaVideos(movieId, 'movie')
+            const filtered = output.filter(
+                (i) => i.type == "Trailer" && i.site == "YouTube"
+            );
+            setMovieTrailer(filtered)
+            setMovieVideos(output)
+        } catch (err) {
+            console.error("Error loading movie videos:", err)
+        }
     }
 
     const loadMoviePictures = async (movieId) => {
-        const output = await getMediaPictures(movieId, 'movie')
-        //console.log(output)
-        setMoviePictures(output)
-
+        try {
+            const output = await getMediaPictures(movieId, 'movie')
+            setMoviePictures(output)
+        } catch (err) {
+            console.error("Error loading movie pictures:", err)
+        }
     }
 
     const loadMovieCredits = async (movieId) => {
-        const output = await getMediaCredits(movieId, 'movie')
-        console.log(output.directors)
-        setMovieCasts(output.casts)
-        setMovieDirectors(output.directors)
-        setMovieWriters(output.writers)
-
+        try {
+            const output = await getMediaCredits(movieId, 'movie')
+            setMovieCasts(output.casts)
+            setMovieDirectors(output.directors)
+            setMovieWriters(output.writers)
+        } catch (err) {
+            console.error("Error loading movie credits:", err)
+        }
     }
 
     const loadMovieWatchProviders = async (movieId) => {
-        const output = await getMediaWatchProviders(movieId, 'movie')
-        //console.log(output)
-        setMovieProvidors(output)
-
+        try {
+            const output = await getMediaWatchProviders(movieId, 'movie')
+            setMovieProvidors(output)
+        } catch (err) {
+            console.error("Error loading watch providers:", err)
+        }
     }
 
 
@@ -234,6 +248,26 @@ const MOVIE = () => {
         )
     }
 
+    if (error) {
+        return (
+            <>
+                <Navbar />
+                <div className="w-full h-screen flex flex-col justify-center items-center bg-gradient-to-r from-purple-500 via-purple-900 to-purple-500 dark:from-black dark:via-black/90 dark:to-black px-4 text-white">
+                    <div className="bg-white/10 backdrop-blur-md p-8 rounded-2xl border border-white/20 flex flex-col items-center max-w-lg w-full text-center shadow-2xl">
+                        <h2 className="text-3xl font-bold mb-2">Error</h2>
+                        <p className="text-gray-300 mb-8">{error}</p>
+                        <button 
+                            onClick={() => window.location.reload()}
+                            className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-full font-bold transition-all"
+                        >
+                            Try Again
+                        </button>
+                    </div>
+                </div>
+            </>
+        )
+    }
+
     return (
         <>
             <Navbar />
@@ -349,7 +383,7 @@ const MOVIE = () => {
                                 </div>
 
                                 {/* writer */}
-                                <div className='flex items-center gap-2 border-t-1 border-t-white p-2 py-1 text-sm'>
+                                <div className='flex flex-wrap items-center gap-2 border-t-1 border-t-white p-2 py-1 text-sm'>
                                     <span>Writers:</span>
                                     {movieWriters && movieWriters.length > 0 ? (
                                         movieWriters.map((writer, index) => (

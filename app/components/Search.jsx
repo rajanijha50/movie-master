@@ -7,6 +7,7 @@ import { searchMediaByQuery } from '../handlers/mediaHandler'
 const ShowSearchResults = () => {
 
     const [searchResult, setSearchResult] = useState(null)
+    const [error, setError] = useState(null)
     const inputRef = useRef(null);
 
     async function loadMovieDetails(movieId, mediaType) {
@@ -14,13 +15,20 @@ const ShowSearchResults = () => {
     }
 
     const searchMovie = async (input) => {
-        const result = await searchMediaByQuery(input)
-        if (!result) {
-            return
+        if (!input.trim()) {
+            setSearchResult(null);
+            setError(null);
+            return;
         }
-        // console.warn(result)
-        setSearchResult(result)
-
+        try {
+            setError(null);
+            const result = await searchMediaByQuery(input)
+            setSearchResult(result)
+        } catch (err) {
+            console.error("Search error:", err);
+            setError("Failed to fetch search results");
+            setSearchResult(null);
+        }
     }
 
     React.useEffect(() => {
@@ -41,6 +49,11 @@ const ShowSearchResults = () => {
                     onChange={(e) => { searchMovie(e.target.value) }}
                 />
             </div>
+            {error && (
+                <div className='w-full h-20 flex justify-center items-center text-red-400'>
+                    <p>{error}</p>
+                </div>
+            )}
             {searchResult && searchResult.length == 0 ? (
                 <div className='w-full h-30 flex justify-center items-center'>
                     <h2 className='text-center text-lg'>No results found!</h2>

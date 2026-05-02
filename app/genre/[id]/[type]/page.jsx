@@ -10,16 +10,23 @@ const Genre = () => {
     const { id, type } = useParams();
 
     const [loading, setloading] = useState(true);
+    const [error, setError] = useState(null);
     const [media, setMedia] = useState([]);
     const [totalResults, setTotalResults] = useState(0);
 
     const loadMediaByGenre = async () => {
-        setloading(true);
-        const output = await getMediaByGenre(id, type)
-        // console.log(output)
-        setMedia(output.results);
-        setTotalResults(output.total_results);
-        setloading(false);
+        try {
+            setloading(true);
+            setError(null);
+            const output = await getMediaByGenre(id, type)
+            setMedia(output.results);
+            setTotalResults(output.total_results);
+        } catch (err) {
+            console.error("Error loading genre media:", err);
+            setError(err.message || "Failed to load media for this genre");
+        } finally {
+            setloading(false);
+        }
     }
 
     const handleSortBy = (e) => {
@@ -63,6 +70,26 @@ const Genre = () => {
                 <div className="w-full h-screen flex flex-col justify-center items-center bg-gradient-to-r from-purple-500 via-purple-900 to-purple-500 dark:from-black dark:via-black/90 dark:to-black">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-2"></div>
                     <p className="text-gray-300">Loading media...</p>
+                </div>
+            </>
+        )
+    }
+
+    if (error) {
+        return (
+            <>
+                <Navbar />
+                <div className="w-full h-screen flex flex-col justify-center items-center bg-gradient-to-r from-purple-500 via-purple-900 to-purple-500 dark:from-black dark:via-black/90 dark:to-black px-4 text-white">
+                    <div className="bg-white/10 backdrop-blur-md p-8 rounded-2xl border border-white/20 flex flex-col items-center max-w-lg w-full text-center shadow-2xl">
+                        <h2 className="text-3xl font-bold mb-2">Error</h2>
+                        <p className="text-gray-300 mb-8">{error}</p>
+                        <button 
+                            onClick={() => window.location.reload()}
+                            className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-full font-bold transition-all"
+                        >
+                            Try Again
+                        </button>
+                    </div>
                 </div>
             </>
         )
