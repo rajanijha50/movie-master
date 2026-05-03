@@ -1,7 +1,6 @@
 import ConnectToDB from "@/utils/connect";
 import { NextResponse } from "next/server";
-import { authOptions } from "@/utils/auth";
-import { getServerSession } from "next-auth";
+
 import Movie from "@/models/movie";
 import Review from "@/models/review";
 

@@ -2,8 +2,7 @@ import User from "@/models/user";
 import ConnectToDB from "@/utils/connect";
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { authOptions } from "@/utils/auth";
-import { getServerSession } from "next-auth";
+import { auth } from "@/auth";
 import Movie from "@/models/movie";
 import Review from "@/models/review";
 
@@ -17,7 +16,7 @@ export async function PUT(request) {
     );
   }
 
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session || !session.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

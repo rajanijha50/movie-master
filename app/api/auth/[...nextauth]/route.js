@@ -1,11 +1,3 @@
-import NextAuth from "next-auth";
-import bcrypt from "bcryptjs";
-import CredentialsProvider from "next-auth/providers/credentials";
-import ConnectToDB from "@/utils/connect";
-import User from "@/models/user";
-import { authOptions } from "@/utils/auth";
+import { handlers } from "@/auth";
 
-
-const handler = NextAuth(authOptions);
-
-export { handler as GET, handler as POST };
+export const { GET, POST } = handlers;

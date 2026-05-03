@@ -1,7 +1,6 @@
 import ConnectToDB from "@/utils/connect";
 import { NextResponse } from "next/server";
-import { authOptions } from "@/utils/auth";
-import { getServerSession } from "next-auth";
+import { auth } from "@/auth";
 import Movie from "@/models/movie";
 import Review from "@/models/review";
 import User from "@/models/user";
@@ -15,7 +14,7 @@ export async function POST(request) {
     );
   }
 
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session || !session.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

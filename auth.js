@@ -1,17 +1,17 @@
+import NextAuth from "next-auth";
+import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
-import CredentialsProvider from "next-auth/providers/credentials";
-import ConnectToDB from "./connect";
+import ConnectToDB from "@/utils/connect";
 import User from "@/models/user";
 
-export const authOptions = {
+export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
-    CredentialsProvider({
+    Credentials({
       name: "Credentials",
       credentials: {
         email: { label: "Email", type: "text" },
         password: { label: "Password", type: "password" },
       },
-
       async authorize(credentials) {
         try {
           await ConnectToDB();
@@ -19,7 +19,6 @@ export const authOptions = {
           if (!credentials?.email || !credentials?.password) {
             throw new Error("Missing email or password");
           }
-
 
           const user = await User.findOne({ email: credentials.email }).select(
             "+password"
@@ -30,15 +29,10 @@ export const authOptions = {
           }
 
           if (!user.password) {
-            throw new Error(
-              "Account uses social login. Please sign in with provider"
-            );
+            throw new Error("Account uses social login. Please sign in with provider");
           }
 
-          const isValid = await bcrypt.compare(
-            credentials.password,
-            user.password
-          );
+          const isValid = await bcrypt.compare(credentials.password, user.password);
 
           if (!isValid) {
             throw new Error("Invalid password");
@@ -51,38 +45,33 @@ export const authOptions = {
           };
         } catch (error) {
           console.error("Auth error:", error);
-          throw error;
+          return null;
         }
       },
     }),
   ],
   callbacks: {
-
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
         token.username = user.username;
         token.email = user.email;
       }
-      // console.log("Token in Auth:",token)
       return token;
     },
     async session({ session, token }) {
-      session.user.id = token.id;
-      session.user.username = token.username;
-      session.user.email = token.email;
-      // console.log("session in Auth:",session)
+      if (token) {
+        session.user.id = token.id;
+        session.user.username = token.username;
+        session.user.email = token.email;
+      }
       return session;
     },
   },
   session: {
     strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60 * 1000,
   },
-  secret: process.env.NEXTAUTH_SECRET,
   pages: {
     signIn: "/login",
-    signUp: "/register",
   },
-  debug: process.env.NODE_ENV === "development",
-};
+});
