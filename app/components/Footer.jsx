@@ -1,21 +1,16 @@
+import Link from 'next/link'
 import React from 'react'
 
 const Footer = () => {
     return (
-        <div className='w-full bg-purple-600 dark:bg-black text-white p-6 space-y-2'>
-            <p className='text-center'>Made with 🩷 on earth</p>
-            <p className='text-center'>Follow us on:
-                <a href="https://www.linkedin.com/in/rajani-ranjan-jha" target='_blank' className='underline text-gray-200 mx-2'>LinkedIn</a> |
-                <a href="https://x.com/rajanijha_dev" target='_blank' className='underline text-gray-200 mx-2'>X</a> |
-                <a href="https://www.instagram.com/rajanijha_dev" target='_blank' className='underline text-gray-200 mx-2'>Instagram</a>
-            </p>
-            <p className='text-center flex items-center gap-2 justify-center'>
-                <span>Contact us:</span>
-                <a href="mailto:contact@moviemaster.in" className='text-gray-200'>
-                    contact@moviemaster.in
+        <div className='flex justify-between items-centerw-full bg-purple-600 dark:bg-black text-white p-6 text-center px-15  text-sm'>
+            <Link href={'/'} className='font-semibold uppercase underline'>Movie Master</Link>
+            <div>
+                Created by{` `}
+                <a className='font-semibold underline lowercase' href="https://github.com/rajanijha50" target="_blank" rel="noopener noreferrer">
+                rajanijha50
                 </a>
-            </p>
-
+            </div>
         </div>
     )
 }
